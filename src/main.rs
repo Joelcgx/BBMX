@@ -1,6 +1,7 @@
 //Mods
 mod class;
 
+use class::load_ui::load_ui_main_window;
 //LIbrerias
 use gtk::prelude::*;
 use gtk::{ Builder, Dialog, Button };
@@ -20,6 +21,12 @@ fn main() {
     //Load ui
     let ui = load_ui();
 
+    //Matar proceso al cerrar la ventana
+    ui.dialog.connect_delete_event(|_, _| {
+        gtk::main_quit();
+        glib::Propagation::Stop
+    });
+
     //Al cilck del boton Cancelar para cerrar el form
     let dialog = ui.dialog.clone();
     ui.button_cancel.connect_clicked(move |_| {
@@ -27,8 +34,8 @@ fn main() {
         gtk::main_quit();
     });
     //Boton Log in
-    ui.button_ok.connect_clicked(|_| {
-        println!("Hello World!");
+    ui.button_ok.connect_clicked(move |_| {
+        load_ui_main_window();
         
     });
 
