@@ -1,16 +1,19 @@
 //Mods
 mod class;
-
-use class::load_ui::load_ui_main_window;
+// funciones de otros archivos
+use class::conex_db::{ verificar_user };
 //LIbrerias
 use gtk::prelude::*;
-use gtk::{ Builder, Dialog, Button };
+use gtk::{ Builder, Dialog, Button, MessageDialog, MessageType, DialogFlags, ButtonsType, Entry };
+use gdk_pixbuf::Pixbuf;
 
 //Structura de los widgets
 struct MyGladeUI {
     dialog: gtk::Dialog,
     button_cancel: gtk::Button,
     button_ok: gtk::Button,
+    user: gtk::Entry,
+    pass: gtk::Entry,
 }
 //fucion Main
 fn main() {
@@ -30,14 +33,43 @@ fn main() {
     //Al cilck del boton Cancelar para cerrar el form
     let dialog = ui.dialog.clone();
     ui.button_cancel.connect_clicked(move |_| {
-        dialog.close();
-        gtk::main_quit();
+        let waring = MessageDialog::new(
+            Some(&dialog),
+            DialogFlags::MODAL,
+            MessageType::Warning,
+            ButtonsType::OkCancel,
+            "Esta seguro que desea salir?"
+        );
+        waring.set_title("Desea Salir?");
+        let pixbuf = Pixbuf::from_file("./src/ui/icons/iconApp.jpg").unwrap();
+        waring.set_icon(Some(&pixbuf));
+
+        //Mostrar dialogo y esperar una respuesta
+        let response = waring.run();
+        match response {
+            gtk::ResponseType::Ok => {
+                gtk::main_quit();
+            }
+            gtk::ResponseType::Cancel => {
+                waring.close();
+            }
+            _ => {}
+        }
+
+        unsafe { waring.destroy() }
     });
     //Boton Log in
-    ui.button_ok.connect_clicked(move |_| {
-        load_ui_main_window();
-        
-    });
+    ui.button_ok.connect_clicked(
+        move |_| {
+            //Verificar
+            let u = ui.user.text();
+            let p = ui.pass.text();
+            verificar_user(&u, &p).unwrap();
+        }
+    );
+    //Icono ala dialog
+    let icon_app = Pixbuf::from_file("./src/ui/icons/iconApp.ico").unwrap();
+    ui.dialog.set_icon(Some(&icon_app));
 
     ui.dialog.show_all();
 
@@ -57,10 +89,14 @@ fn load_ui() -> MyGladeUI {
     let button_ok: Button = builder
         .object("log_in_btn")
         .expect("No se pudo encontrar el log_in_btn");
-
+    let user: Entry = builder.object("user_entry1").expect("No se pudo encontrar el user_entr");
+    let pass: Entry = builder.object("passw_entry").expect("No se pudo encontrar el pass_entr");
+    
     MyGladeUI {
         dialog,
         button_cancel,
         button_ok,
+        user,
+        pass,
     }
 }
